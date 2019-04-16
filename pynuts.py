@@ -108,4 +108,6 @@ async def main() -> None:
 
 if __name__ == '__main__':
 	assert sys.version_info >= (3, 7), "Script requires Python 3.7+."
-	asyncio.run(main())
+	loop = asyncio.get_event_loop()
+	loop.run_until_complete(main())
+	loop.close()
