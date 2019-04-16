@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import sys
+import datetime
 import iec62056
 
 logging.basicConfig(
@@ -13,6 +14,11 @@ logging.basicConfig(
 )
 #logger = logging.getLogger("pynuts")
 #logging.getLogger("chardet.charsetprober").disabled = True
+
+class Measurement(object):
+	def __init__(self, timestamp, fields):
+		self.timestamp = timestamp
+		self.fields = fields
 
 class QueueManipulator(object):
 	def __init__(self, q : asyncio.Queue) -> None:
@@ -71,8 +77,17 @@ class Serial62056Receiver(MeasurementProducer):
 				b'!6796\r\n'
 			)
 			telegram = self.iec_parser.parse(dummy.decode('ascii'))
+			fields = {}
+			t =  datetime.datetime.now()
+			for k in telegram.keys():
+				v = telegram[k]
+				if isinstance(v, iec62056.objects.Register):
+					if type(v.value) in [int, float]:
+						fields[k] = v.value
+					if type(v.value) in [datetime.datetime]:
+						t = v.value
 			self.logger.debug('Queueing measurement')
-			await self.q.put({k: telegram[k].value for k in telegram.keys() if isinstance(telegram[k], iec62056.objects.Register)})
+			await self.q.put(Measurement(t, fields))
 			self.logger.debug('Sleeping 5 seconds')
 			await asyncio.sleep(5)
 
@@ -80,7 +95,7 @@ class InfluxDBSubmitter(MeasurementConsumer):
 	async def run(self) -> None:
 		while True:
 			m = await self.q.get()
-			self.logger.debug(f'Received measurement from queue ({len(m.keys())} keys). Submitting')
+			self.logger.debug(f'Received measurement from queue (t={m.timestamp.strftime("%c")}, {len(m.fields.keys())} keys). Submitting')
 			await asyncio.sleep(0.5)
 			self.q.task_done()
 
