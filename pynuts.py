@@ -24,7 +24,7 @@ class QueueManipulator(object):
 	def __init__(self, q : asyncio.Queue) -> None:
 		self.q = q
 		self.logger = logging.getLogger(self.__class__.__name__)
-
+	
 class MeasurementProducer(QueueManipulator):
 	pass
 
@@ -83,7 +83,12 @@ class Serial62056Receiver(MeasurementProducer):
 				v = telegram[k]
 				if isinstance(v, iec62056.objects.Register):
 					if type(v.value) in [int, float]:
-						fields[k] = v.value
+						if v.timestamp is None:
+							fields[k] = v.value
+						else:
+							sub = Measurement(v.timestamp, {k: v.value})
+							self.logger.debug('Queueing sub-measurement (gas?)')
+							await self.q.put(sub)
 					if type(v.value) in [datetime.datetime]:
 						t = v.value
 			self.logger.debug('Queueing measurement')
