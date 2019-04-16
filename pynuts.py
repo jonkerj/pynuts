@@ -5,6 +5,7 @@ import logging
 import sys
 import datetime
 import iec62056
+import yaml
 
 logging.basicConfig(
 	format="%(asctime)s %(levelname)s:%(name)s: %(message)s",
@@ -21,9 +22,11 @@ class Measurement(object):
 		self.fields = fields
 
 class QueueManipulator(object):
-	def __init__(self, q : asyncio.Queue) -> None:
+	def __init__(self, q : asyncio.Queue, config : dict) -> None:
 		self.q = q
-		self.logger = logging.getLogger(f'pynuts.{self.__class__.__name__}')
+		self.config = config
+		self.logger = logging.getLogger(f'pynuts.{self.config["name"]}')
+		self.logger.info(f'Initialized as a {self.__class__.__name__}')
 	
 class MeasurementProducer(QueueManipulator):
 	pass
@@ -32,8 +35,8 @@ class MeasurementConsumer(QueueManipulator):
 	pass
 
 class Serial62056Receiver(MeasurementProducer):
-	def __init__(self, q : asyncio.Queue) -> None:
-		super().__init__(q)
+	def __init__(self, q : asyncio.Queue, config : dict) -> None:
+		super().__init__(q, config)
 		self.iec_parser = iec62056.parser.Parser()
 
 	async def run(self) -> None:
@@ -67,15 +70,29 @@ class InfluxDBSubmitter(MeasurementConsumer):
 			await asyncio.sleep(0.5)
 			self.q.task_done()
 
-async def main() -> None:
+systems = {
+	'serial_iec': Serial62056Receiver,
+	'influxdb': InfluxDBSubmitter,
+}
+
+async def main(config: dict) -> None:
 	q = asyncio.Queue()
-	subsystems = [Serial62056Receiver(q), InfluxDBSubmitter(q)]
+	subsystems = []
+	assert 'subsystems' in config, 'Config should contain "subsystems" key'
+	assert isinstance(config['subsystems'], list), 'subsystems should be a list'
+	for subsys in config['subsystems']:
+		if subsys['system'] not in systems:
+			raise NotImplementedError(f'Subsystem {subsys["name"]} is not implemented')
+		klass = systems[subsys['system']]
+		subsystems.append(klass(q, subsys))
 	tasks = map(asyncio.create_task, [s.run() for s in subsystems])
 	await asyncio.gather(*tasks)
 	await q.join()
 
 if __name__ == '__main__':
 	assert sys.version_info >= (3, 7), "Script requires Python 3.7+."
+	with open('config.yaml', 'r') as fh:
+		config = yaml.load(fh, Loader=yaml.SafeLoader)
 	loop = asyncio.get_event_loop()
-	loop.run_until_complete(main())
+	loop.run_until_complete(main(config))
 	loop.close()
