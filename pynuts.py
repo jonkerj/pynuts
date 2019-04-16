@@ -12,7 +12,7 @@ logging.basicConfig(
 	datefmt="%H:%M:%S",
 	stream=sys.stderr,
 )
-#logger = logging.getLogger("pynuts")
+logger = logging.getLogger("pynuts")
 #logging.getLogger("chardet.charsetprober").disabled = True
 
 class Measurement(object):
@@ -23,7 +23,7 @@ class Measurement(object):
 class QueueManipulator(object):
 	def __init__(self, q : asyncio.Queue) -> None:
 		self.q = q
-		self.logger = logging.getLogger(self.__class__.__name__)
+		self.logger = logging.getLogger(f'pynuts.{self.__class__.__name__}')
 	
 class MeasurementProducer(QueueManipulator):
 	pass
