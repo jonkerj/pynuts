@@ -2,6 +2,11 @@
 subsystems:
 - name: power
   system: serial_iec
+- name: heat
+  system: serial_iec
+  request:
+    command: "/?!\r\n"
+    delay: 8
 - name: influx
   system: influxdb
 ...
