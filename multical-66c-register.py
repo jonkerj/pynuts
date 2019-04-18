@@ -22,11 +22,11 @@ async def kamstrup66c(reader, writer):
 	writer.transport.serial.baudrate = 300
 	data = data[5:].decode('ascii').split(' ')
 	return {
-		'energy': float(data[0])/1000,
-		'volume': float(data[1])/1000,
-		'hours': int(data[2]),
-		't_in': float(data[3])/100,
-		't_out': float(data[4])/100,
+		'energy': float(data[0])/100,  #GJ
+		'volume': float(data[1])/100,  #m3
+		'hours': int(data[2]),         #h
+		't_in': float(data[3])/100,    #C
+		't_out': float(data[4])/100,   #C
 	}
 
 if __name__ == '__main__':
