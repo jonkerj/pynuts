@@ -8,6 +8,14 @@ async def main():
 	data = await kamstrup66c(reader, writer)
 	print(data)
 
+# the correct formula is:
+# 0) set settings to 300 7e2
+# 1) send /#1\r\n
+# 2) wait 1s (while flushing buffer?)
+# 3) set speed to 1200 baud
+# 4) receive up to 87 characters
+# thanks you, https://github.com/RuntimeError123/hass-mc66c/
+
 async def kamstrup66c(reader, writer):
 	print('Requesting register 1')
 	writer.write(b'/#1\r\n')
