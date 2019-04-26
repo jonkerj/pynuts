@@ -36,11 +36,8 @@ class MeasurementConsumer(QueueManipulator):
 	pass
 
 class Serial62056Receiver(MeasurementProducer):
-	def __init__(self, q : asyncio.Queue, config : dict) -> None:
-		super().__init__(q, config)
-		self.iec_parser = iec62056.parser.Parser()
-
 	async def run(self) -> None:
+		iec_parser = iec62056.parser.Parser()
 		while True:
 			if 'request' in self.config:
 				command = self.config["request"]["command"].encode('ascii')
@@ -49,7 +46,7 @@ class Serial62056Receiver(MeasurementProducer):
 					self.logger.debug(f'Delaying {self.config["request"]["delay"]}s')
 					await asyncio.sleep(self.config["request"]["delay"])
 			# mock Kaifa MA-105
-			telegram = self.iec_parser.parse(iec62056.samples.KAIFA_MA105.decode('ascii'))
+			telegram = iec_parser.parse(iec62056.samples.KAIFA_MA105.decode('ascii'))
 			fields = {}
 			t =  datetime.datetime.now()
 			for k in telegram.keys():
