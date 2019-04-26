@@ -78,11 +78,14 @@ class Multical66Receiver(MeasurementProducer):
 	# 4) receive up to 87 characters
 	# thank you, https://github.com/RuntimeError123/hass-mc66c/
 	async def run(self) -> None:
-		self.logger.debug('Creating serial reader/writer by opening port')
-		reader, writer = await serial_asyncio.open_serial_connection(url='/dev/kamstrup', baudrate=300, bytesize=7, parity='E', stopbits=2)
+		port = self.config['port']
+		self.logger.debug(f'Creating serial reader/writer for {port} (300 7e2)')
+		reader, writer = await serial_asyncio.open_serial_connection(url=port, baudrate=300, bytesize=7, parity='E', stopbits=2)
 		while True:
 			t =  datetime.datetime.now()
 			self.logger.debug('Requesting register 1')
+			# baudrate is not exposed in serial_async, but can be accessed through (only) the writer
+			writer.transport.serial.baudrate = 300
 			writer.write(b'/#1\r\n')
 			await asyncio.sleep(1)
 			self.logger.debug('Waiting for answer')

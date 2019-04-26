@@ -4,6 +4,7 @@ subsystems:
   system: serial_iec
 - name: heat
   system: multical66
+  port: /dev/kamstrup
 - name: influx
   system: influxdb
 ...
