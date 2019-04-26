@@ -6,6 +6,7 @@ import sys
 import datetime
 import iec62056
 import yaml
+import serial_asyncio
 
 logging.basicConfig(
 	format="%(asctime)s %(levelname)s:%(name)s: %(message)s",
@@ -68,6 +69,40 @@ class Serial62056Receiver(MeasurementProducer):
 			self.logger.debug('Sleeping 5 seconds')
 			await asyncio.sleep(5)
 
+class Multical66Receiver(MeasurementProducer):
+	# the correct formula is:
+	# 0) set settings to 300 7e2
+	# 1) send /#1\r\n
+	# 2) wait 1s (while flushing buffer?)
+	# 3) set speed to 1200 baud
+	# 4) receive up to 87 characters
+	# thank you, https://github.com/RuntimeError123/hass-mc66c/
+	async def run(self) -> None:
+		self.logger.debug('Creating serial reader/writer by opening port')
+		reader, writer = await serial_asyncio.open_serial_connection(url='/dev/kamstrup', baudrate=300, bytesize=7, parity='E', stopbits=2)
+		while True:
+			t =  datetime.datetime.now()
+			self.logger.debug('Requesting register 1')
+			writer.write(b'/#1\r\n')
+			await asyncio.sleep(1)
+			self.logger.debug('Waiting for answer')
+			writer.transport.serial.baudrate = 1200
+			await asyncio.sleep(9)
+			raw = await reader.read(87)
+			writer.transport.serial.baudrate = 300
+			data = raw[5:].decode('ascii').split(' ')
+			fields = {
+				'energy': float(data[0])/100,  #GJ
+				'volume': float(data[1])/100,  #m3
+				't_in': float(data[3])/100,    #C
+				't_out': float(data[4])/100,   #C
+			}
+			self.logger.debug('Queueing measurement')
+			await self.q.put(Measurement(t, fields))
+			duration = (datetime.datetime.now() - t).total_seconds()
+			self.logger.debug(f'Fetching took {duration}s, sleeping {60 - duration}s')
+			await asyncio.sleep(60 - duration)
+
 class InfluxDBSubmitter(MeasurementConsumer):
 	async def run(self) -> None:
 		while True:
@@ -78,6 +113,7 @@ class InfluxDBSubmitter(MeasurementConsumer):
 
 systems = {
 	'serial_iec': Serial62056Receiver,
+	'multical66': Multical66Receiver,
 	'influxdb': InfluxDBSubmitter,
 }
 
