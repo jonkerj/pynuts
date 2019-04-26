@@ -44,9 +44,9 @@ class Serial62056Receiver(MeasurementProducer):
 			if 'request' in self.config:
 				command = self.config["request"]["command"].encode('ascii')
 				self.logger.debug(f'Requesting telegram by saying {command}')
-			if 'request' in self.config and 'delay' in self.config['request']:
-				self.logger.debug(f'Delaying {self.config["request"]["delay"]}s')
-				await asyncio.sleep(self.config["request"]["delay"])
+				if 'delay' in self.config['request']:
+					self.logger.debug(f'Delaying {self.config["request"]["delay"]}s')
+					await asyncio.sleep(self.config["request"]["delay"])
 			# mock Kaifa MA-105
 			telegram = self.iec_parser.parse(iec62056.samples.KAIFA_MA105.decode('ascii'))
 			fields = {}
