@@ -99,6 +99,8 @@ class Multical66Receiver(MeasurementProducer):
 		port = self.config['port']
 		self.logger.debug(f'Creating serial reader/writer for {port} (300 7e2)')
 		reader, writer = await serial_asyncio.open_serial_connection(url=port, baudrate=300, bytesize=7, parity='E', stopbits=2)
+		interval = int(self.config['interval'])
+		self.logger.info(f'Polling in {interval}s intervals')
 		while True:
 			t =  datetime.datetime.now()
 			self.logger.debug('Requesting register 1')
@@ -121,8 +123,8 @@ class Multical66Receiver(MeasurementProducer):
 			self.logger.debug('Queueing measurement')
 			await self.q.put(Measurement(self.config['name'], t, fields))
 			duration = (datetime.datetime.now() - t).total_seconds()
-			self.logger.debug(f'Fetching took {duration}s, sleeping {60 - duration}s')
-			await asyncio.sleep(60 - duration)
+			self.logger.debug(f'Fetching took {duration:.3}s, sleeping {interval - duration:.5}s')
+			await asyncio.sleep(interval - duration)
 
 class InfluxDBSubmitter(MeasurementConsumer):
 	async def run(self) -> None:

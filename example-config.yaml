@@ -6,6 +6,7 @@ subsystems:
 - name: heat
   system: multical66
   port: /dev/kamstrup
+  interval: 1800
 - name: influx
   system: influxdb
   connection:
