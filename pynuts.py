@@ -111,10 +111,10 @@ class Multical66Receiver(MeasurementProducer):
 			writer.transport.serial.baudrate = 300
 			data = raw[5:].decode('ascii').split(' ')
 			fields = {
-				'energy': float(data[0])/100,  #GJ
-				'volume': float(data[1])/100,  #m3
-				't_in': float(data[3])/100,    #C
-				't_out': float(data[4])/100,   #C
+				'energy': float(data[0]) * 1.0e7,
+				'volume': float(data[1]) * 1.0e1,
+				't_in': float(data[3])/100,
+				't_out': float(data[4])/100,
 			}
 			self.logger.debug('Queueing measurement')
 			await self.q.put(Measurement(t, fields))
