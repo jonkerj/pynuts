@@ -5,6 +5,7 @@ import logging
 import sys
 import datetime
 import iec62056
+import influxdb
 import yaml
 import serial_asyncio
 
@@ -124,6 +125,7 @@ class Multical66Receiver(MeasurementProducer):
 
 class InfluxDBSubmitter(MeasurementConsumer):
 	async def run(self) -> None:
+		idb = influxdb.InfluxDBClient(**self.config['connection'])
 		while True:
 			m = await self.q.get()
 			self.logger.debug(f'Received measurement from queue (t={m.timestamp.strftime("%c")}, {len(m.fields.keys())} keys). Submitting')

@@ -8,4 +8,12 @@ subsystems:
   port: /dev/kamstrup
 - name: influx
   system: influxdb
+  connection:
+    host: influxdb.cloud.com
+    port: 443
+    ssl: True
+    verify_ssl: True
+    username: john
+    password: PythonIsGreat
+    database: pynuts
 ...

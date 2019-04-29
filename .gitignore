@@ -105,3 +105,6 @@ venv.bak/
 
 # direnv
 .direnv/
+
+# actual config
+config.yaml
