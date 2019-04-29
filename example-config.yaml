@@ -16,4 +16,6 @@ subsystems:
     username: john
     password: PythonIsGreat
     database: pynuts
+  tags:
+    marco: polo
 ...

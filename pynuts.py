@@ -19,7 +19,8 @@ logger = logging.getLogger("pynuts")
 #logging.getLogger("chardet.charsetprober").disabled = True
 
 class Measurement(object):
-	def __init__(self, timestamp, fields):
+	def __init__(self, name, timestamp, fields):
+		self.name = name
 		self.timestamp = timestamp
 		self.fields = fields
 
@@ -55,13 +56,13 @@ class Serial62056Receiver(MeasurementProducer):
 					if v.timestamp is None:
 						fields[k] = v.value
 					else:
-						sub = Measurement(v.timestamp, {k: v.value})
+						sub = Measurement(self.config['name'], v.timestamp, {k: v.value})
 						self.logger.debug('Queueing sub-measurement (gas?)')
 						await self.q.put(sub)
 				if type(v.value) in [datetime.datetime]:
 					t = v.value
 		self.logger.debug('Queueing measurement')
-		await self.q.put(Measurement(t, fields))
+		await self.q.put(Measurement(self.config['name'], t, fields))
 		
 	async def run(self) -> None:
 		port = self.config['port']
@@ -118,7 +119,7 @@ class Multical66Receiver(MeasurementProducer):
 				't_out': float(data[4])/100,
 			}
 			self.logger.debug('Queueing measurement')
-			await self.q.put(Measurement(t, fields))
+			await self.q.put(Measurement(self.config['name'], t, fields))
 			duration = (datetime.datetime.now() - t).total_seconds()
 			self.logger.debug(f'Fetching took {duration}s, sleeping {60 - duration}s')
 			await asyncio.sleep(60 - duration)
@@ -130,8 +131,15 @@ class InfluxDBSubmitter(MeasurementConsumer):
 		self.logger.info(f'Connected to InfluxDB version {idb.ping()}')
 		while True:
 			m = await self.q.get()
-			self.logger.debug(f'Received measurement from queue (t={m.timestamp.strftime("%c")}, {len(m.fields.keys())} keys). Submitting')
-			await asyncio.sleep(0.5)
+			utc = m.timestamp.replace(tzinfo=datetime.timezone.utc)
+			self.logger.debug(f'Submitting measurement from {m.name}')
+			# TODO make influxdb aio too
+			idb.write_points([{
+				'measurement': m.name,
+				'tags': self.config['tags'],
+				'time': utc.strftime('%Y-%m-%dT%H:%M:%SZ'),
+				'fields': m.fields,
+			}])
 			self.q.task_done()
 
 systems = {
