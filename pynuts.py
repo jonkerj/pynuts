@@ -49,14 +49,28 @@ class Serial62056Receiver(MeasurementProducer):
 	async def process_telegram(self, telegram):
 		fields = {}
 		t =  datetime.datetime.now()
+		units = {
+			None: lambda x: x,
+			'kWh': lambda x: x * 3.6e6,
+			'A': lambda x: x,
+			'V': lambda x: x,
+			'kW': lambda x: x * 1e3,
+			'm3': lambda x: x * 1e3,
+			'W': lambda x: x,
+			's': lambda x: x,
+		}
 		for k in telegram.keys():
 			v = telegram[k]
 			if isinstance(v, iec62056.objects.Register):
 				if type(v.value) in [int, float]:
+					if v.unit not in units:
+						raise NotImplementedError(f'No transformation function for unit {v.unit} yet')
+					transformed = units[v.unit](v.value)
+
 					if v.timestamp is None:
-						fields[k] = v.value
+						fields[k] = transformed
 					else:
-						sub = Measurement(self.config['name'], v.timestamp, {k: v.value})
+						sub = Measurement(self.config['name'], v.timestamp, {k: transformed})
 						self.logger.debug('Queueing sub-measurement (gas?)')
 						await self.q.put(sub)
 				if type(v.value) in [datetime.datetime]:
