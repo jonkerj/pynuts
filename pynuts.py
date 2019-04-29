@@ -125,7 +125,9 @@ class Multical66Receiver(MeasurementProducer):
 
 class InfluxDBSubmitter(MeasurementConsumer):
 	async def run(self) -> None:
+		self.logger.debug('Initializing InfluxDB client')
 		idb = influxdb.InfluxDBClient(**self.config['connection'])
+		self.logger.info(f'Connected to InfluxDB version {idb.ping()}')
 		while True:
 			m = await self.q.get()
 			self.logger.debug(f'Received measurement from queue (t={m.timestamp.strftime("%c")}, {len(m.fields.keys())} keys). Submitting')
