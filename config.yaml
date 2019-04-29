@@ -2,6 +2,7 @@
 subsystems:
 - name: power
   system: serial_iec
+  port: /dev/kaifa
 - name: heat
   system: multical66
   port: /dev/kamstrup

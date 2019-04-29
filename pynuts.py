@@ -36,35 +36,54 @@ class MeasurementConsumer(QueueManipulator):
 	pass
 
 class Serial62056Receiver(MeasurementProducer):
+	async def request(self):
+		if 'request' in self.config:
+			command = self.config["request"]["command"].encode('ascii')
+			self.logger.debug(f'Requesting telegram by saying {command}')
+			if 'delay' in self.config['request']:
+				self.logger.debug(f'Delaying {self.config["request"]["delay"]}s')
+				await asyncio.sleep(self.config["request"]["delay"])
+	
+	async def process_telegram(self, telegram):
+		fields = {}
+		t =  datetime.datetime.now()
+		for k in telegram.keys():
+			v = telegram[k]
+			if isinstance(v, iec62056.objects.Register):
+				if type(v.value) in [int, float]:
+					if v.timestamp is None:
+						fields[k] = v.value
+					else:
+						sub = Measurement(v.timestamp, {k: v.value})
+						self.logger.debug('Queueing sub-measurement (gas?)')
+						await self.q.put(sub)
+				if type(v.value) in [datetime.datetime]:
+					t = v.value
+		self.logger.debug('Queueing measurement')
+		await self.q.put(Measurement(t, fields))
+		
 	async def run(self) -> None:
+		port = self.config['port']
+		self.logger.debug(f'Creating serial reader/writer for {port} (115200 7n1)')
+		reader, _ = await serial_asyncio.open_serial_connection(url=port, baudrate=115200, bytesize=7, parity='N', stopbits=1)
 		iec_parser = iec62056.parser.Parser()
+		buf = bytes()
+		await self.request()
 		while True:
-			if 'request' in self.config:
-				command = self.config["request"]["command"].encode('ascii')
-				self.logger.debug(f'Requesting telegram by saying {command}')
-				if 'delay' in self.config['request']:
-					self.logger.debug(f'Delaying {self.config["request"]["delay"]}s')
-					await asyncio.sleep(self.config["request"]["delay"])
-			# mock Kaifa MA-105
-			telegram = iec_parser.parse(iec62056.samples.KAIFA_MA105.decode('ascii'))
-			fields = {}
-			t =  datetime.datetime.now()
-			for k in telegram.keys():
-				v = telegram[k]
-				if isinstance(v, iec62056.objects.Register):
-					if type(v.value) in [int, float]:
-						if v.timestamp is None:
-							fields[k] = v.value
-						else:
-							sub = Measurement(v.timestamp, {k: v.value})
-							self.logger.debug('Queueing sub-measurement (gas?)')
-							await self.q.put(sub)
-					if type(v.value) in [datetime.datetime]:
-						t = v.value
-			self.logger.debug('Queueing measurement')
-			await self.q.put(Measurement(t, fields))
-			self.logger.debug('Sleeping 5 seconds')
-			await asyncio.sleep(5)
+			t0 = datetime.datetime.now()
+			line = await reader.read(2048)
+			t1 = datetime.datetime.now()
+
+			# if receiving the line took more than 1 second, it is the start of a new telegram
+			if (t1 - t0).total_seconds() > 1:
+				if len(buf) > 0:
+					self.logger.debug('Assembling telegram')
+					telegram = iec_parser.parse(buf.decode('ascii'))
+					await self.process_telegram(telegram)
+				buf = line
+				await self.request()
+			else:
+				buf += line
 
 class Multical66Receiver(MeasurementProducer):
 	# the correct formula is:
