@@ -98,8 +98,12 @@ class Serial62056Receiver(MeasurementProducer):
 			if (t1 - t0).total_seconds() > 1:
 				if len(buf) > 0:
 					self.logger.debug('Assembling telegram')
-					telegram = iec_parser.parse(buf.decode('ascii'))
-					await self.process_telegram(telegram)
+					try:
+						telegram = iec_parser.parse(buf.decode('ascii'))
+					except Exception: # TODO catch more specific exceptions
+						pass
+					else:
+						await self.process_telegram(telegram)
 				buf = line
 				await self.request()
 			else:
