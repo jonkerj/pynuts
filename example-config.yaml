@@ -7,6 +7,12 @@ subsystems:
   system: multical66
   port: /dev/kamstrup
   interval: 1800
+- name: water
+  system: gpiocounter
+  gpio: 6
+  key: volume
+  resolution: 0.2
+  increment: 0.5
 - name: influx
   system: influxdb
   connection:

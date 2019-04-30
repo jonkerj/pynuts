@@ -144,6 +144,24 @@ class Multical66Receiver(MeasurementProducer):
 			self.logger.debug(f'Fetching took {duration:.3}s, sleeping {interval - duration:.5}s')
 			await asyncio.sleep(interval - duration)
 
+class GPIOCounter(MeasurementProducer):
+	async def run(self) -> None:
+		gpio = self.config['gpio']
+		with open(f'/sys/class/gpio/gpio{gpio}/value', 'rb') as f:
+			last = None
+			count = 0.0
+			increment = self.config['increment']
+			while True:
+				v = int(f.read())
+				f.seek(0)
+
+				if last is not None and v != last:
+					self.logger.debug(f'GPIO changed from {last} to {v}')
+					count += increment
+					await self.q.put(Measurement(self.config['name'], now(), {self.config['key']: count}))
+				last = v
+				await asyncio.sleep(self.config['resolution'])
+
 class InfluxDBSubmitter(MeasurementConsumer):
 	async def run(self) -> None:
 		self.logger.debug('Initializing InfluxDB client')
@@ -164,6 +182,7 @@ systems = {
 	'serial_iec': Serial62056Receiver,
 	'multical66': Multical66Receiver,
 	'influxdb': InfluxDBSubmitter,
+	'gpiocounter': GPIOCounter,
 }
 
 async def main(config: dict) -> None:
