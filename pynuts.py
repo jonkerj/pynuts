@@ -6,7 +6,6 @@ import sys
 import datetime
 import iec62056
 import influxdb
-import tzlocal
 import yaml
 import serial_asyncio
 
@@ -20,7 +19,8 @@ logger = logging.getLogger("pynuts")
 #logging.getLogger("chardet.charsetprober").disabled = True
 
 def now():
-	return tzlocal.get_localzone().localize(datetime.datetime.now())
+	zone = datetime.datetime.now(datetime.timezone.utc).astimezone()
+	return datetime.datetime.now().replace(tzinfo=zone.tzinfo)
 
 class Measurement(object):
 	def __init__(self, name, timestamp, fields):
@@ -90,9 +90,9 @@ class Serial62056Receiver(MeasurementProducer):
 		buf = bytes()
 		await self.request()
 		while True:
-			t0 = datetime.datetime.now()
+			t0 = now()
 			line = await reader.read(2048)
-			t1 = datetime.datetime.now()
+			t1 = now()
 
 			# if receiving the line took more than 1 second, it is the start of a new telegram
 			if (t1 - t0).total_seconds() > 1:
@@ -124,7 +124,7 @@ class Multical66Receiver(MeasurementProducer):
 		interval = int(self.config['interval'])
 		self.logger.info(f'Polling in {interval}s intervals')
 		while True:
-			t =  datetime.datetime.now()
+			t =  now()
 			self.logger.debug('Requesting register 1')
 			# baudrate is not exposed in serial_async, but can be accessed through (only) the writer
 			writer.transport.serial.baudrate = 300
@@ -144,7 +144,7 @@ class Multical66Receiver(MeasurementProducer):
 			}
 			self.logger.debug('Queueing measurement')
 			await self.q.put(Measurement(self.config['name'], now(), fields))
-			duration = (datetime.datetime.now() - t).total_seconds()
+			duration = (now() - t).total_seconds()
 			self.logger.debug(f'Fetching took {duration:.3}s, sleeping {interval - duration:.5}s')
 			await asyncio.sleep(interval - duration)
 
@@ -175,7 +175,7 @@ class InfluxDBSubmitter(MeasurementConsumer):
 			m = await self.q.get()
 			self.logger.debug(f'Submitting measurement from {m.name}')
 			# TODO make influxdb aio too
-			idb.write_points(time_precision='s', tags=self.config['tags'], points=[{
+			idb.write_points(tags=self.config['tags'], points=[{
 				'measurement': m.name,
 				'time': m.timestamp,
 				'fields': m.fields,
