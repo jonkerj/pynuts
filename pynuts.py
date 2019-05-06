@@ -136,14 +136,18 @@ class Multical66Receiver(MeasurementProducer):
 			raw = await reader.read(87)
 			writer.transport.serial.baudrate = 300
 			data = raw[5:].decode('ascii').split(' ')
-			fields = {
-				'energy': float(data[0]) * 1.0e7,
-				'volume': float(data[1]) * 1.0e1,
-				't_in': float(data[3])/100,
-				't_out': float(data[4])/100,
-			}
-			self.logger.debug('Queueing measurement')
-			await self.q.put(Measurement(self.config['name'], now(), fields))
+			try:
+				fields = {
+					'energy': float(data[0]) * 1.0e7,
+					'volume': float(data[1]) * 1.0e1,
+					't_in': float(data[3])/100,
+					't_out': float(data[4])/100,
+				}
+			except ValueError:
+				continue
+			else:
+				self.logger.debug('Queueing measurement')
+				await self.q.put(Measurement(self.config['name'], now(), fields))
 			duration = (now() - t).total_seconds()
 			self.logger.debug(f'Fetching took {duration:.3}s, sleeping {interval - duration:.5}s')
 			await asyncio.sleep(interval - duration)
