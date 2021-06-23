@@ -31,6 +31,7 @@ class PyNuts:
 		while True:
 			m = self.input.read()
 			self.output.write(m)
+			self.input.wait()
 
 if __name__ == '__main__':
 	p = PyNuts(config.PyNuts.from_environ())

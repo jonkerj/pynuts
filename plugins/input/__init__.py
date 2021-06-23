@@ -9,10 +9,15 @@ class Base(Plugin):
 
 	def getMeasurement(self):
 		raise NotImplementedError
+	
+	def wait(self):
+		pass
 
 from .serialiec62056 import SerialIEC62056
+from .kamstrup import Multical66
 
 __all__ = [
 	Base,
 	SerialIEC62056,
+	Multical66,
 ]
