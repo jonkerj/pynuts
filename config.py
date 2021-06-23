@@ -52,12 +52,15 @@ class PyNuts:
 
 	@environ.config
 	class Serial:
-		port = environ.var("/dev/ttyUSB0")
+		port = environ.var('')
 		baudrate = environ.var(115200, converter=int)
 		bytesize = environ.var(7, converter=int)
 		parity = environ.var('N')
 		stopbits = environ.var(1, converter=int)
 		timeout = environ.var(2, converter=float)
+		vid = environ.var('')
+		pid = environ.var('')
+		serial = environ.var('')
 	
 	serial = environ.group(Serial)
 	
