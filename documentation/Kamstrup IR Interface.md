@@ -35,19 +35,24 @@ to my meter, which works quite robustly.
 ## Nuts config
 
 The following excerpt works with my district heat meter:
-```INI
-[subsystem:heat]
-class = SerialIECInterface
-port = /dev/kamstrup
-baud = 300
-bits = 7
-parity = E
-stop = 2
-timeout = 8
-keys = heat_consumed, volume
-request = /?!\r\n
-sleep_after_request = 0.5
-interval = 1800
+```
+export PYNUTS_LOGLEVEL="DEBUG"
+export PYNUTS_INFLUXDB_HOST="influxdb.influxdb"
+export PYNUTS_INFLUXDB_PORT="8086"
+export PYNUTS_INFLUXDB_SSL="False"
+export PYNUTS_INFLUXDB_USERNAME="henk"
+export PYNUTS_INFLUXDB_PASSWORD="wootwoot"
+export PYNUTS_INFLUXDB_DATABASE="nuts"
+export PYNUTS_INFLUXDB_TAGS="location=secret"
+export PYNUTS_INPUT_CLS="multical66"
+export PYNUTS_INPUT_NAME="heat"
+export PYNUTS_SERIAL_VID="0403"
+export PYNUTS_SERIAL_PID="6001"
+export PYNUTS_SERIAL_SERIAL="A400gnAW"
+export PYNUTS_SERIAL_PARITY="E"
+export PYNUTS_SERIAL_STOPBITS="1"
+export PYNUTS_SERIAL_BYTESIZE="7"
+export PYNUTS_SERIAL_BAUDRATE="300"
 ```
 
 ## External Links
