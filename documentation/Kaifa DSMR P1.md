@@ -34,19 +34,19 @@ not get [ftx-prog](https://github.com/richardeoin/ftx-prog) to work.
 ```
 
 Furthermore, you'll need to set the following parameters:
-```INI
-[subsystem:power]
-class = SerialIECInterface
-port = /dev/kaifa
-baud = 115200
-bits = 7
-parity = N
-stop = 1
-timeout = 4
-keys = energy_consumed_t1, energy_consumed_t2
 ```
-Of course, you are free to use other keys as well (`energy_produced_*`, if you
-have PV on your roof).
+export PYNUTS_SERIAL_VID="0403"
+export PYNUTS_SERIAL_PID="6001"
+export PYNUTS_SERIAL_SERIAL="A9IT5F7J"
+export PYNUTS_LOGLEVEL="DEBUG"
+export PYNUTS_INFLUXDB_HOST="influxdb.influxdb"
+export PYNUTS_INFLUXDB_PORT="80806"
+export PYNUTS_INFLUXDB_SSL="False"
+export PYNUTS_INFLUXDB_USERNAME="henk"
+export PYNUTS_INFLUXDB_PASSWORD="wootwoot"
+export PYNUTS_INFLUXDB_DATABASE="nuts"
+export PYNUTS_INFLUXDB_TAGS="location=secret"
+```
 
 ## External Links
 * [DSMR P1 Companion Standard](http://www.netbeheernederland.nl/themas/hotspot/hotspot-documenten/?dossierid=11010056&title=Slimme%20meter&onderdeel=Documenten)
