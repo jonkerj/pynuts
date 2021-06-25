@@ -57,7 +57,7 @@ class SerialIEC62056(Serial):
 					else:
 						self.log.debug('Found a sub-measurement. This is not supported yet')
 				if isinstance(v.value, datetime.datetime):
-					t = v.value.replace(tzinfo=cfg.input_tz)
+					t = v.value.replace(tzinfo=self.cfg.input_tz)
 		return Measurement(self.name, t, fields)
 
 	def getMeasurement(self):
