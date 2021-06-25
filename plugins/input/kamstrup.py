@@ -7,8 +7,7 @@ from .serialplugin import Serial
 from main import Measurement
 
 def now():
-	zone = datetime.datetime.now(datetime.timezone.utc).astimezone()
-	return datetime.datetime.now().replace(tzinfo=zone.tzinfo)
+	return datetime.datetime.utcnow()
 
 class Multical66(Serial):
 	pluginName = "multical66"

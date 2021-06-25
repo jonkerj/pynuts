@@ -8,8 +8,7 @@ from .serialplugin import Serial
 from main import Measurement
 
 def now():
-	zone = datetime.datetime.now(datetime.timezone.utc).astimezone()
-	return datetime.datetime.now().replace(tzinfo=zone.tzinfo)
+	return datetime.datetime.utcnow()
 
 class SerialIEC62056(Serial):
 	pluginName = "serialiec62056"
