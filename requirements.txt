@@ -3,3 +3,4 @@ environ-config==21.2.0
 iec62056==0.4.2
 influxdb==5.3.1
 pyserial==3.5
+pytz==2021.1
