@@ -1,10 +1,12 @@
 # stdlib
+import datetime
 import inspect
 import logging
 import sys
 
 # upstream
 import environ
+import pytz
 
 # own
 import plugins
@@ -46,6 +48,7 @@ def convOutputPlugin(s):
 class PyNuts:
 	input_cls = environ.var("serialiec62056", converter=convInputPlugin)
 	input_name = environ.var("power")
+	input_tz = environ.var("Europe/Amsterdam", converter=pytz.timezone)
 	output_cls = environ.var("influxdb", converter=convOutputPlugin)
 	output_name = environ.var("influxdb")
 	loglevel = environ.var("INFO", converter=convLoglevel)
