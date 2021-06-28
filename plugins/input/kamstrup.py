@@ -2,6 +2,7 @@ import datetime
 import time
 
 import attr
+import pytz
 
 from .serialplugin import Serial
 from main import Measurement
