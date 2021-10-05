@@ -10,17 +10,21 @@ from main import Measurement
 def now():
 	return pytz.UTC.localize(datetime.datetime.utcnow())
 
+def readfile(fn):
+	with open(fn, 'rb') as f:
+		v = f.read().strip()
+	return v
+
 class Counter(Base):
 	pluginName = "counter"
 
 	def init(self):
 		self.count = 0
-		self.last = None
+		self.last = readfile(self.cfg.counter.filename)
 		self.log.info(f'Watching file {self.cfg.counter.filename} for changes')
 
 	def getMeasurement(self):
-		with open(self.cfg.counter.filename, 'rb') as f:
-			v = f.read().strip()
+		v = readfile(self.cfg.counter.filename)
 		if self.last is None or v != self.last:
 			self.log.debug(f'File changed from {self.last} to {v}')
 			self.last = v
