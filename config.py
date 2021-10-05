@@ -66,6 +66,15 @@ class PyNuts:
 		serial = environ.var('')
 	
 	serial = environ.group(Serial)
+
+	@environ.config
+	class Counter:
+		filename = environ.var('/sys/class/gpio/gpio71/value') # On Pine A64 this is PC7 / pin 11 on Pi2 header
+		increase = environ.var(0.5, converter=float)
+		key = environ.var('volume')
+		interval = environ.var(0.1)
+	
+	counter = environ.group(Counter)
 	
 	@environ.config
 	class InfluxDB:

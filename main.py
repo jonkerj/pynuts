@@ -25,7 +25,8 @@ class PyNuts:
 	def run(self):
 		while True:
 			m = self.input.read()
-			self.output.write(m)
+			if m:
+				self.output.write(m)
 			self.input.wait()
 
 if __name__ == '__main__':
