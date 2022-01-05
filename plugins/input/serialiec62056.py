@@ -62,7 +62,13 @@ class SerialIEC62056(Serial):
 		return Measurement(self.name, t, fields)
 
 	def getMeasurement(self):
-		while True:
+		retries = 5
+		while retries > 0:
 			datagram = self.__readFromPort()
-			measurement = self.__processDatagram(datagram)
+			try:
+				measurement = self.__processDatagram(datagram)
+			except:
+				retries -= 1
+				self.log.warning(f'Could not parse telegram, {retries} retries left')
+				continue
 			return measurement
