@@ -9,8 +9,10 @@ class Base(Plugin):
 		raise NotImplementedError
 
 from .influxdb import InfluxDB
+from .fake import Fake
 
 __all__ = [
 	Base,
 	InfluxDB,
+	Fake,
 ]

@@ -16,10 +16,12 @@ class Base(Plugin):
 from .serialiec62056 import SerialIEC62056
 from .kamstrup import Multical66
 from .counter import Counter
+from .fake import Fake
 
 __all__ = [
 	Base,
 	SerialIEC62056,
 	Multical66,
 	Counter,
+	Fake,
 ]
