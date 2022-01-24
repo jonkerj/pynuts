@@ -52,6 +52,7 @@ class PyNuts:
 	output_cls = environ.var("influxdb", converter=convOutputPlugin)
 	output_name = environ.var("influxdb")
 	loglevel = environ.var("INFO", converter=convLoglevel)
+	influxdb_bucket = environ.var('pynuts', name='INFLUXDB_V2_BUCKET')  # bit awkward, but if we put it under sub-config-class we cannot get this nice envvar
 
 	@environ.config
 	class Serial:
@@ -76,15 +77,3 @@ class PyNuts:
 	
 	counter = environ.group(Counter)
 	
-	@environ.config
-	class InfluxDB:
-		host = environ.var("influxdb.influxdb")
-		port = environ.var(8086, converter=int)
-		ssl = environ.var(False, converter=bool)
-		verify_ssl = environ.var(True, converter=bool)
-		database = environ.var("pynuts")
-		username = environ.var("john")
-		password = environ.var("PythonIsGreat")
-		tags = environ.var("", converter=convTags)
-	
-	influxdb = environ.group(InfluxDB)

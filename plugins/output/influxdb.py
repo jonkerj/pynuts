@@ -1,6 +1,7 @@
 import time
 
-import influxdb
+from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 from . import Base
 
@@ -8,24 +9,17 @@ class InfluxDB(Base):
 	pluginName = "influxdb"
 
 	def init(self):
-		self.log.debug(f'Connection parameters: {self.cfg.influxdb}')
-		self.client = influxdb.InfluxDBClient(
-			host=self.cfg.influxdb.host,
-			port=self.cfg.influxdb.port,
-			ssl=self.cfg.influxdb.ssl,
-			verify_ssl=self.cfg.influxdb.verify_ssl,
-			database=self.cfg.influxdb.database,
-			username=self.cfg.influxdb.username,
-			password=self.cfg.influxdb.password,
-		)
-		version = self.client.ping()
-		self.log.info(f'Initialized InfluxDB connection to {self.cfg.influxdb.host}:{self.cfg.influxdb.port}, version {version}')
+		self.client = InfluxDBClient.from_env_properties()
+		self.bucket = self.cfg.influxdb_bucket
+		self.write_api = self.client.write_api(write_options=SYNCHRONOUS)
+		health = self.client.health()
+
+		assert health.status == 'pass'
+		self.log.info(f'Initialized InfluxDB connection to {self.client.url}, bucket {self.bucket} version {health.version}')
 
 	def submitMeasurement(self, measurement):
-		res = self.client.write_points(tags=self.cfg.influxdb.tags, points=[{
-			'measurement': measurement.name,
-			'time': measurement.timestamp,
-			'fields': measurement.fields,
-		}])
-		if not res:
-			raise RuntimeError('Write to InfluxDB returned False')
+		p = Point(measurement.name).time(measurement.timestamp)
+		for k, v in measurement.fields.items():
+			p = p.field(k, v)
+		
+		self.write_api.write(self.bucket, record=p)
