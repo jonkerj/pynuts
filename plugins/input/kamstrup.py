@@ -33,6 +33,13 @@ class Multical66(Serial):
 	
 	def __processDatagram(self, datagram):
 		data = datagram.decode('ascii').split(' ')
+		if len(data) < 10:
+			self.log.warn(f'Corrupt reply, less than 10 fields returned')
+			return None
+		for d in data[:10]:
+			if len(d) != 7:
+				self.log.warn(f'Corrupt reply, field {d} has invalid length')
+				return None
 		try:
 			fields = {
 				'energy': float(data[0]) * 1.0e7,
