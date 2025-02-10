@@ -1,6 +1,6 @@
-attrs==21.2.0
-environ-config==21.2.0
+attrs==25.1.0
+environ-config==24.1.0
 iec62056==0.5.0
-influxdb-client==1.25.0
+influxdb-client==1.48.0
 pyserial==3.5
-pytz==2021.1
+pytz==2025.1
