@@ -24,8 +24,9 @@ class Serial(Base):
 				self.log.debug(f'Looking for match {cfgKey}={cfgVal}')
 				if cfgVal != '':
 					if devVal is None:
-						self.log.debug(f'{port.device} has no {cfgKey}')
+						self.log.debug(f'{port.device} has no {cfgKey} property. Skipping')
 						match = False
+						continue
 					
 					cfgVal = cfgTrans(cfgVal)
 					devVal = devTrans(devVal)
